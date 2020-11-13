@@ -1,0 +1,7 @@
+VAR DATA_ATUAL, DATA_INICIAL, DATA_FINAL;
+
+SE( 
+    DATA_INICIAL > DATA_ATUAL
+;   
+;   'Aguardando...'
+)
