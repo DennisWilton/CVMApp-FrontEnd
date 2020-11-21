@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Wrapper, App, AppContent, Loading } from './App.style';
 import assets from 'util/assets';
 import {Route, Switch, useHistory, useLocation} from 'react-router-dom';
-import Home from './Home/Home';
 import anime from 'animejs';
 import Profile from './Profile/Profile';
 import Register from './Register/Register';
 import { useDispatch, useSelector } from 'react-redux';
 import ProtectedRoute from 'util/ProtectedRoute';
+
+//pages
+import Home from './Home/Home';
+import News from 'mobile/pages/News/News';
 
 let timeline;
 
@@ -107,6 +110,9 @@ export default function APP(){
                         </ProtectedRoute>
                         <Route path="/register">
                             <Register/>
+                        </Route>
+                        <Route path="/news">
+                            <News/>
                         </Route>
                         <Route path="/">Página não encontrada. <div onClick={() => history.goBack()}>Clique aqui para voltar à página inicial.</div></Route>
                     </Switch>
