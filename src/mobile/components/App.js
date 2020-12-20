@@ -11,6 +11,7 @@ import ProtectedRoute from 'util/ProtectedRoute';
 //pages
 import Home from './Home/Home';
 import News from 'mobile/pages/News/News';
+import Single from 'mobile/pages/News/Single/Single';
 
 let timeline;
 
@@ -28,6 +29,8 @@ export default function APP(){
         setState( (state) => ({...state, minHeight: window.innerHeight <= 937 ? window.innerHeight : 937}) );
         dispatch({type: 'MAIN.APP.START'});
     }, [])
+
+ 
    
     useEffect(() => {
         timeline = anime.timeline({});
@@ -110,6 +113,8 @@ export default function APP(){
                         </ProtectedRoute>
                         <Route path="/register">
                             <Register/>
+                        </Route>
+                        <Route exact path="/news/:id" component={Single}>
                         </Route>
                         <Route path="/news">
                             <News/>
