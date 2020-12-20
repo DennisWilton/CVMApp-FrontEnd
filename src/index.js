@@ -9,7 +9,9 @@ import store from './redux/store';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 
-export const baseURL = 'http://192.168.0.81:3001';
+
+export const baseURL = process.env.REACT_APP_HOST;
+
 export const client = new ApolloClient({
   uri: `${baseURL}/graphql`,
   cache: new InMemoryCache()
