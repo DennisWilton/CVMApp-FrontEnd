@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import {useQuery, gql} from '@apollo/client';
-import {baseURL} from 'index';
 import { Title, ScrollableNews, CloseButton } from './News.style';
 
 //Components

@@ -4,7 +4,7 @@ import { Wrapper } from './Activities.style';
 export default function Activities(props){
     return <>
         <Wrapper>
-            Oi
+            {process.env.REACT_APP_HOST}
         </Wrapper>
     </>
 }

@@ -6,11 +6,12 @@ import setLoadingMessage from 'redux/actions/main/setLoadingMessage';
 const VERIFY_TOKEN = (token) => gql`
     query VERIFY_TOKEN {
         verify_token(token: "${token}"){
+            _id
             name
             cpf
             email
-            password
             token
+            isConfirmado
         }
     }
 `
@@ -30,10 +31,11 @@ export function* APPSTART(){
         
         yield put({type: 'MAIN.SET_LOADING.OFF'});
         yield put({type: 'AUTH.LOGGED', payload: result.data.verify_token});
+        yield put({type: 'PMT.CHECK_STATUS'});
     }catch(e){
 
-        yield put(setLoadingMessage(`Falha ao tentar fazer o login. Por favor, tente novamente.`))
-        yield delay(10000);
+        yield put(setLoadingMessage(`Falha ao tentar fazer o login. Por favor, tente novamente.\n\n(${e.message})`))
+        yield delay(2000);
         yield put({type: 'MAIN.SET_LOADING.OFF'});
         yield put({type: 'AUTH.LOGGED', payload: null});
     }

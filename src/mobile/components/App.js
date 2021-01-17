@@ -12,6 +12,8 @@ import ProtectedRoute from 'util/ProtectedRoute';
 import Home from './Home/Home';
 import News from 'mobile/pages/News/News';
 import Single from 'mobile/pages/News/Single/Single';
+import Payment from 'mobile/pages/Payment/Payment';
+import Config from 'mobile/pages/Config/Config';
 
 let timeline;
 
@@ -30,8 +32,6 @@ export default function APP(){
         dispatch({type: 'MAIN.APP.START'});
     }, [])
 
- 
-   
     useEffect(() => {
         timeline = anime.timeline({});
         timeline.pause();
@@ -93,6 +93,18 @@ export default function APP(){
         document.title = mainState.title;
     }, [mainState.title])
    
+    useEffect(() => {
+        let interval;
+
+        interval = setInterval(() => {
+            dispatch({type: 'PMT.CHECK_STATUS'});
+        }, 1000 * 60 * 10)
+
+        return () => {
+            clearInterval(interval);
+        }
+        
+    }, [])
     
     return <>
         <App>
@@ -119,6 +131,12 @@ export default function APP(){
                         <Route path="/news">
                             <News/>
                         </Route>
+                        <ProtectedRoute path="/pagamento">
+                            <Payment></Payment>
+                        </ProtectedRoute>
+                        <ProtectedRoute path="/configuracoes">
+                            <Config></Config>
+                        </ProtectedRoute>
                         <Route path="/">Página não encontrada. <div onClick={() => history.goBack()}>Clique aqui para voltar à página inicial.</div></Route>
                     </Switch>
                 </AppContent>

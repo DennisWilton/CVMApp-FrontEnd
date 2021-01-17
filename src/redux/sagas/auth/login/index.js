@@ -23,11 +23,13 @@ export function* LOGIN(action){
             query Login{
                 login( cpf: "${ payload.cpf }", password: "${ payload.password }" )
                 {
+                    _id
                     name
                     cpf
                     email
                     password
                     token
+                    isConfirmado
                 }
             }
         `})

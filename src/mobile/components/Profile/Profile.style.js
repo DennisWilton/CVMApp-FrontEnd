@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const Wrapper = styled.div`
   color: #FFF;
   display: grid;
-  grid-template-rows: repeat(3, auto) 100%;
+  grid-template-rows: repeat(4, auto) 100%;
   height: 100%;
 `;
 

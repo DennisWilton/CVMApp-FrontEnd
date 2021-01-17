@@ -5,14 +5,17 @@ import { useHistory } from 'react-router-dom';
 import Opcao from './Opcao/Opcao';
 import Activities from './Activities/Activities';
 import { useSelector } from 'react-redux';
+import PaymentStatus from '../PaymentStatus/PaymentStatus';
+import Button from '../Button/Button';
 let animation;
 
 export default function Profile(){
     const title = useRef();
     const history = useHistory();
     const { user } = useSelector(state => state.auth);
+    const paymentState = useSelector(state => state.payment);
 
-    useEffect(() => {
+      useEffect(() => {
         if(animation?.pause) animation.pause();
         animation = anime.timeline({});
 
@@ -29,7 +32,10 @@ export default function Profile(){
         <Wrapper>
             <Row>
                 <UserName className={"title"}>{user?.name?.split(" ")[0] + ' ' +  (user?.name?.split(" ").length > 1 ? user?.name?.split(" ")[user?.name?.split(" ")?.length - 1] : '') || 'Jovem'}</UserName>
-                <div style={{fontSize: `0.7em`}}>CONFIGURAÇÕES</div>
+                <div onClick={() => history.push('configuracoes')} style={{fontSize: `0.7em`}}>CONFIGURAÇÕES</div>
+            </Row>
+            <Row>
+               {(paymentState.actualStatus == 0 || paymentState.actualStatus == 7) && <Button onClick={() => history.push('pagamento')} block bg="#195" p={'15px 15px'} color="#fff">Pague sua inscrição aqui</Button>}                
             </Row>
             <Row>
                 <Versiculo>
