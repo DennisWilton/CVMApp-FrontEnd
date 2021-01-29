@@ -31,11 +31,19 @@ export default function Profile(){
     return <>
         <Wrapper>
             <Row>
-                <UserName className={"title"}>{user?.name?.split(" ")[0] + ' ' +  (user?.name?.split(" ").length > 1 ? user?.name?.split(" ")[user?.name?.split(" ")?.length - 1] : '') || 'Jovem'}</UserName>
+                <UserName className={"title"}>{user?.username?.split(" ")[0] + ' ' +  (user?.username?.split(" ").length > 1 ? user?.username?.split(" ")[user?.username?.split(" ")?.length - 1] : '') || 'Jovem'}</UserName>
                 <div onClick={() => history.push('configuracoes')} style={{fontSize: `0.7em`}}>CONFIGURAÇÕES</div>
             </Row>
             <Row>
-               {(paymentState.actualStatus == 0 || paymentState.actualStatus == 7) && <Button onClick={() => history.push('pagamento')} block bg="#195" p={'15px 15px'} color="#fff">Pague sua inscrição aqui</Button>}                
+            { !user?.inscrito && <>
+                { paymentState.isLoading  
+                    ? <Button disabled block bg="#666" p={'15px 15px'} color="#fff">Carregando situação da inscrição...</Button> 
+                    : 
+                    <>{(paymentState.status == 0 || paymentState.status == 7) 
+                        && <Button onClick={() => history.push('pagamento')} block bg="#195" p={'15px 15px'} color="#fff">Pague sua inscrição aqui</Button>}                
+                      </>
+                }
+            </>}
             </Row>
             <Row>
                 <Versiculo>

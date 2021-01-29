@@ -14,6 +14,7 @@ import News from 'mobile/pages/News/News';
 import Single from 'mobile/pages/News/Single/Single';
 import Payment from 'mobile/pages/Payment/Payment';
 import Config from 'mobile/pages/Config/Config';
+import Boleto from 'mobile/pages/Boleto';
 
 let timeline;
 
@@ -123,8 +124,8 @@ export default function APP(){
                         <ProtectedRoute path="/profile">
                             <Profile/>
                         </ProtectedRoute>
-                        <Route path="/register">
-                            <Register/>
+                        <Route path="/register" render={() => <Register/>}>
+                            
                         </Route>
                         <Route exact path="/news/:id" component={Single}>
                         </Route>
@@ -136,6 +137,9 @@ export default function APP(){
                         </ProtectedRoute>
                         <ProtectedRoute path="/configuracoes">
                             <Config></Config>
+                        </ProtectedRoute>
+                        <ProtectedRoute path="/boleto">
+                            <Boleto></Boleto>
                         </ProtectedRoute>
                         <Route path="/">Página não encontrada. <div onClick={() => history.goBack()}>Clique aqui para voltar à página inicial.</div></Route>
                     </Switch>

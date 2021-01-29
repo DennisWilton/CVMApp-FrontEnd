@@ -7,7 +7,7 @@ import { Title, LoadingWrapper } from './Payment.style';
 import Loading from './Loading';
 import Step0 from './steps/Step0';
 import { useHistory } from 'react-router-dom';
-
+import strapi from 'api/strapi';
 
 function delay(timeout = 1000){
   return new Promise(function(resolve, reject){
@@ -19,7 +19,14 @@ export default function Payment(){
 
     const history = useHistory();
     const { auth: {user}, ...reduxState } = useSelector(state => state);
-    const [state, setState] = useState({isLoading: true, isHashReady: false, isError: false, step: 0, cardInfoModal: false})
+    const [state, setState] = useState({
+      isLoading: true, 
+      isHashReady: false, 
+      isError: false, 
+      step: 0, 
+      cardInfoModal: false,
+      lote: null
+    })
     const dispatch = useDispatch();
 
     async function setError(e){
@@ -29,7 +36,7 @@ export default function Payment(){
     async function payCartao(){
       axios.post(`${baseURL}/buying/cartao`, {
         hash: state.hash.toString(),
-        name: user.name.toString(),
+        name: user.username.toString(),
         email: user.email.toString(),
         phone: { areaCode: '65', number: '981363139'},
         cpf: user.cpf.toString(),
@@ -46,39 +53,35 @@ export default function Payment(){
     }
     
     async function payBoleto(){
-      axios.post(`${baseURL}/buying/boleto`, {
+
+      setState(state => ({...state, isLoading: true, loadingStatus: 'Gerando boleto...'}))
+
+      strapi.secure.post(`/buying/payBoleto`, {
         hash: state.hash.toString(),
-        name: user.name.toString(),
-        email: user.email.toString(),
-        phone: { areaCode: '65', number: '981363139'},
-        cpf: user.cpf.toString(),
-        items: [{
-          id: 'lote01',
-          description: 'Inscrição de participante no 1º lote',
-          amount: '230.00',
-          quantity: '1.00'
-        }]
-      }, {headers: {'Authorization': `Bearer ${user.token}`}})
-      .then( paymentLink => console.log("Link de pagamento:", paymentLink))
+        userId: user.id
+      })
+      .then( data => history.replace('/boleto') )
+      .catch( async error => {
+
+        setState(state => ({...state, isLoading: true, loadingStatus: 'Falha ao gerar o boleto!'}))
+        await delay(3000);
+        
+        history.replace('/profile')
+      })
     }
     
     async function getSessionID(){
       return new Promise(async (res, rej) => {
         setState(state => ({...state, loadingStatus: 'Gerando sessão de usuário...'}))
-        const {data} = await axios.get(`${baseURL}/buying/getSessionID`)
-
-
-        if(!data.status) {
-          setState(state => ({...state, loadingStatus: 'Problemas na comunicação com o PagSeguro...'}));
-          await delay(5000);
-          setState(state => ({...state, loadingStatus: 'Tente novamente mais tarde.'}));
+        try{
+          const response = await strapi.secure.get('/buying/getSessionID', {params: {userId: user.id}});
+          setState(state => ({...state, loadingStatus: 'Gerando hash de segurança do usuário.'}))
+          res(response.data.session.id)
+        }catch(e){
+          if(e.response && e.response.data) setState(state => ({...state, loadingStatus: e.response.data.message}))
           await delay(2000);
-          history.replace('/profile');
-          return;
+          return rej(e.response)
         }
-        
-        setState(state => ({...state, loadingStatus: 'Gerando hash de segurança...'}))
-        res(data.sessionID);
       })
     }
 
@@ -87,34 +90,38 @@ export default function Payment(){
     }
 
     async function run(){
-      window.PagSeguroDirectPayment.setSessionId(await getSessionID());
-      // console.log("Sessão de pagamento PagSeguro gerada com sucesso!")
+      try{
 
-      window.PagSeguroDirectPayment.onSenderHashReady(function(resposta){
-        try {
+        strapi.secure.get('/buying/loteInfo')
+        .then ( response => {
+          setState(state => ({...state, lote: response.data}))
+        })
+        .catch( err => {
+          setState( state => ({...state, isError: {message: 'Falha ao buscar informações do lote.' }}))
+        } )
+
+        window.PagSeguroDirectPayment.setSessionId(await getSessionID());
+        
+        await delay(1000);
+        window.PagSeguroDirectPayment.onSenderHashReady(function(resposta){
+
           if(resposta.status == 'error') {
-            console.log(resposta.message);
-            return false;
-          }
-          setState(state => ({...state, isHashReady: true, hash: resposta.senderHash}))
-        }catch(e){
-          history.replace('/profile');
+          setState(state => ({...state, loadingStatus: 'Erro do PagSeguro: Falha ao gerar o hash do usuário.'}));
+          return false;
         }
+        setState(state => ({...state, isLoading: false, isHashReady: true, hash: resposta.senderHash}))
       })
 
-
-      window.PagSeguroDirectPayment.getPaymentMethods({
-        amount: 230,
-        success: function(result){
-          setState(state => ({...state, isLoading: false}))
-          console.log(result)
-        }
-      });
+      }catch(e){
+        history.replace('/profile')
+      }
     }
     
     useEffect(() => {
       run();
     }, [])
+
+    
 
    if(state.isError) return <>
     <div>

@@ -2,7 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { all, takeEvery, delay, put} from 'redux-saga/effects';
 import {client} from 'index';
 import setLoadingMessage from 'redux/actions/main/setLoadingMessage';
-
+import strapi from 'api/strapi';
 
 export function* LOGIN(action){
     const {payload, history, setState} = action;
@@ -19,31 +19,34 @@ export function* LOGIN(action){
     yield put(setLoadingMessage('Entrando...'))
     yield delay(100);
     try {
-        const response = yield client.query({query: gql`
-            query Login{
-                login( cpf: "${ payload.cpf }", password: "${ payload.password }" )
-                {
-                    _id
-                    name
-                    cpf
-                    email
-                    password
-                    token
-                    isConfirmado
-                }
-            }
-        `})
+       const response = yield (strapi.post('/auth/local', {
+            identifier: payload.cpf,
+            password: payload.password
+        })
+        .then(response => {
+          return response;
+        })
+        .catch(err => {
+            throw err
+        }));
+        
+        localStorage.setItem('__authtoken', response.data.jwt)
+        localStorage.setItem('__username', response.data.user.username)
 
-        localStorage.setItem('__authtoken', response.data.login.token)
-        localStorage.setItem('__username', response.data.login.name)
+        strapi.updateSecure();
 
         yield put({type: 'MAIN.SET_LOADING.OFF'});
-        yield put({type: 'AUTH.LOGGED', payload: response.data.login});
+        yield put({type: 'AUTH.LOGGED', payload: response.data.user});
+        yield put({type: 'PMT.CHECK_STATUS'});
+
 
     }catch(e){
-        console.error(e);
+        e.response.data.message.map( ({messages}) => {
+            messages.map( ({message}) => {
+                setState(state => ({...state, isErro: true, erro: message}))
+            })
+        })
         yield put(setLoadingMessage('Falha ao tentar entrar.'));
-        setState(state => ({...state, isErro: true, erro: e?.networkError?.result?.errors?.[0]?.message ?? e.message}))
         yield put({type: 'MAIN.SET_LOADING.OFF'});
     }
 

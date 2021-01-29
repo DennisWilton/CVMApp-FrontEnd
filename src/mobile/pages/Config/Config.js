@@ -31,7 +31,7 @@ export default function Config({...props}){
             </Row>
             <Row>
                 <User>
-                    <span className="user-name">{user.name}</span>
+                    <span className="user-name">{user.username}</span>
                     <span className="user-email">{user.email}</span>
                 </User>
             </Row>

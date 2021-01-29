@@ -1,186 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import {Wrapper, InputGroup, Button, Cancel, Row, Select} from './Register.style';
-import MaskedInput from 'react-text-mask';
-import { Redirect, useHistory } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import useStyles from './useStyles';
+import {Form} from '@unform/web';
+import strapi from 'api/strapi';
+import delay from 'util/delay';
+
+
+//Steps
+import Inicial from './Steps/Inicial';
+import Pessoais from './Steps/Pessoais';
+import { useHistory } from 'react-router-dom';
+
+let to;
+
+
+export const RegisterContext = React.createContext();
 
 export default function Register(props){
+   
+   const classes = useStyles()
+   const [state, setState] = useState({step: 1, tryAgain: 3, isLoading: false, messages: ['Aguarde...',]}),
+         formRef      = useRef(),
+         history      = useHistory(),
+         handleSubmit = async (data, tryAgain = 3, ...rest) => {
+                            setLoading("Enviando dados...");
 
-    const history = useHistory();
-    const dispatch = useDispatch();
-    const auth = useSelector(state => state.auth);
+                            try {
+                                const response = await strapi.post('auth/inscrever', data)
 
-    
+                                
+                                setLoading("", false);
+                                history.push('/');
+                                
+                            }catch(e){
+                                console.log(e);
+                                if(!e.response){
+                                    setLoading(["Erro de conexão com o servidor."])
+                                    await delay(2000);
+                                    if(--tryAgain >= 0){
+                                        setLoading([`Tentando novamente (${3 - tryAgain}/3)`])
+                                        await delay(1000);
+                                        handleSubmit(data, tryAgain, ...rest);
+                                    }else{
+                                        setLoading("", false);
+                                    }
+                                }else {
+                                    setLoading(["Erro ao tentar inscrever-se.", e.response.data.message])
+                                    await delay(1000);
+                                    setLoading("", false);
+                                }
+                            }
+                        };
+   
+   function setLoading(message = 'Carregando...', status = true){
+       if(Array.isArray(message)) setState(state => ({...state, isLoading: status, messages: message}));
+       else setState(state => ({...state, isLoading: status, messages: [message]}));
+   }                   
 
-    const [state, setState] = useState({firstName: 'Jovem', step: 1});
-    const [data, setData] = useState({church: {}});
-
-    const handleName = (e) => {
-        e.persist();
-        e.target.value = /(([A-z]+)\s?)+/gi.exec(e.target.value)?.[0] || ''
-        let firstName = e.target.value.trim().split(" ")[0];
-
-        if(!firstName) {
-            firstName = 'Jovem'
-        }
-        
-        setState(state => ({...state, firstName}));
-        setData(data => ({...data, name: e.target.value || ''}));
-    }
-    const handleMail = (e) => {
-        e.persist();
-        const {value} = e.target;
-        setData(data => ({...data, mail: undefined}));
-        if(value == ""){
-           return setState(state => ({...state, isMailValid: undefined}))
-        }
-
-        const regex = /^[a-z0-9.]+@[a-z0-9]+(\.[a-z]+){1,2}$/i;
-
-        if(regex.test(value)){
-            setState(state => ({...state, isMailValid: true}))
-            setData(data => ({...data, mail: value}));
-        } else {
-            setState(state => ({...state, isMailValid: false}))
-        }
-    }
-    const handleCPF = (e) => {
-        e.persist();
-        setData(data => ({...data, cpf: e.target.value}))
-    }
-
-
-    const handlePassword = function(e){
-        e.persist();
-        if(!e.target.value){
-            setState(state => ({...state, password: null}))
-            return;
-        }
-
-        e.target.value = e.target.value.trim();
-
-        setState(state => ({...state, password: e.target.value}))
-    }
-    const handlePasswordConfirm = function(e){
-        e.persist();
-        if(!e.target.value){
-            setState(state => ({...state, passwordConfirm: null}))
-            return;
-        }
-
-        e.target.value = e.target.value.trim();
-
-        setState(state => ({...state, passwordConfirm: e.target.value}))
-    }
-    const handleChurchPastor = function(e){
-        e.persist();
-        if(!e.target.value){
-            setData(data => ({...data, church: {...data.church, pastor: undefined}}))
-            return;
-        }
-
-        setData(data => ({...data, church: {...data.church, pastor: e.target.value.trim()}}))
-    }
-    const handleChurchName = function(e){
-        e.persist();
-        if(!e.target.value){
-            setData(data => ({...data, church: {...data.church, name: undefined}}))
-            return;
-        }
-
-        setData(data => ({...data, church: {...data.church, name: e.target.value.trim()}}))
-    }
-    
-    const nextStep = function(e){
-        setState(state => ({...state, step: state.step + 1}))
-    }
-    const backStep = function(e){
-        setState(state => ({...state, step: state.step - 1}))
-    }
-    const confirm = function(){
-
-        if(!data.cpf || !data.name || !data.mail || !data.password || !data.church.pastor || !data.church.name ){
-            return;
-        }
-
-        
-        dispatch({type: 'REGISTER.SEND_DATA', payload: data, history});
-        
-    }
-    
-    useEffect(() => {
-        if(state.passwordConfirm !== state.password) {
-            setState((state) => ({...state, invalidPassword: true}))
-            setData((data) => ({...data, password: undefined}))
-        } else {
-            setState((state) => ({...state, invalidPassword: false}))
-            setData((data) => ({...data, password: state.password}))
-        }
-    }, [state.password, state.passwordConfirm])
-    
-    if(auth.user){
-        return <Redirect to={'/'}/>
-    }
-
-    if(state.step == 1) {
-        return <>
-        <Wrapper>
-            
-        <h1>Olá, {state.firstName || 'Jovem'}!</h1>
-        <p>Sua experiência começa agora.</p><p>Faça seu cadastro e garanta a sua participação no CVM#MorteVital!</p>
-        <InputGroup canContinue={!!(data.name && data.cpf && data.mail)}>
-            <div className="row" style={{marginTop: -20}}>
-                <Cancel onClick={() => history.push('/')}>Cancelar inscrição</Cancel>
-            </div>
-            <div className="row">
-                <input name="name" autoComplete="false" autoCapitalize="true" defaultValue={data.name} placeholder="Nome completo" onChange={handleName} />
-            </div>
-            <div className="row">
-               <MaskedInput name="cpf" 
-                mask={[/\d/, /\d/, /\d/,'.',/\d/, /\d/, /\d/,'.',/\d/, /\d/, /\d/,'-',/\d/,/\d/]}
-                placeholder="CPF"
-                onBlur={handleCPF}
-                defaultValue={data.cpf}
-                inputMode="numeric"
-                autoComplete="off"
-                ></MaskedInput>
-            </div>
-            <div className="row">
-                <input name="mail" className={(state.isMailValid || state.isMailValid === undefined) ? '' : 'invalid'} defaultValue={data.mail} placeholder="E-mail" onChange={handleMail} />
-            </div>
-            <div
-                className="row">
-                <Button onClick={nextStep} style={{marginTop: 20}} color={!!(data.name && data.cpf && data.mail) ? '#159' : "#222"} textColor="#FFF">Continuar</Button>
-            </div>
-        </InputGroup>
-        </Wrapper>
-    </>}
-
-    if(state.step == 2) {
-        return <>
-            <Button onClick={backStep} color={`#222`} textColor="#FFF">Voltar</Button>
-            <InputGroup>
-            <Row marginTop="20px">
-                <input type='password' onChange={handlePassword}  defaultValue={data.password} placeholder="Senha"/>
-            </Row>
-            <Row>
-                <input type='password' className={state.invalidPassword ? 'invalid' : ''} defaultValue={data.password} onChange={handlePasswordConfirm} placeholder="Confirmação da senha"/>
-            </Row>
-            <Row textColor="#FFF9" marginTop="20px">
-                <span>{state.firstName}, informe-nos, por favor, a igreja que você congrega e o nome do seu pastor.</span>
-            </Row>
-            <Row textColor="#FFF9" marginTop="20px">
-                <input onChange={handleChurchName} defaultValue={data.church.name} placeholder="Nome da igreja"/>
-            </Row>
-            <Row marginTop="0px">
-                <input type="text" onChange={handleChurchPastor} defaultValue={data.church.pastor} placeholder="Nome do pastor"/>
-            </Row>
-            <Row marginTop="20px" >
-               <Button onClick={confirm} color="#222" textColor="#FFF">Finalizar cadastro</Button>
-            </Row>
-
-
-        </InputGroup>
-        </>
-    }
+   return (<>
+   {state.isLoading && <>
+   <div className={classes.loading}>
+       {state.messages.map( message => <span>{message}</span>)}
+       </div></>}
+   <Form className={classes.form} ref={formRef} onSubmit={(data, ...rest) => handleSubmit(data, 3, ...rest)} >
+       <Pessoais setLoading={setLoading} showStep={state.step == 1} form={formRef}/>
+       <button className={`${classes.submit} ${classes.fullwidth}`} type="submit">Pronto</button>
+   </Form></>)
 }

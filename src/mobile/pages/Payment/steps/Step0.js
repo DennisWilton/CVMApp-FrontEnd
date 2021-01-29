@@ -6,9 +6,6 @@ import CardInfo from './CardInfo';
 export default function Step0({methods, parentState, ...props}){
     const { auth: {user}, ...reduxState } = useSelector(state => state);
 
-    useEffect(() => {
-        console.log(user)
-    }, [])
     
     return <>
 
@@ -19,7 +16,7 @@ export default function Step0({methods, parentState, ...props}){
 
         <Item>
             <span className="title">Nome completo:</span>
-            <span className="value">{user.name}</span>
+            <span className="value">{user.username}</span>
         </Item>
 
         
@@ -35,11 +32,11 @@ export default function Step0({methods, parentState, ...props}){
 
         <WhiteBox>
             <Product>
-                <span className="description">Inscrição de participante</span>
-                <span className="value">R$ 230.00</span>
+                <span className="description">Inscrição no {parentState[0]?.lote?.numero || '??'}º lote</span>
+                <span className="value">R$ {parentState[0].lote.valor}</span>
             </Product>
             <Buttons>
-                <Button onClick={methods.toggleModal} style={{gridColumn: `1/2`}}>Pagar com cartão de crédito</Button>
+                <p style={{textAlign: `justify`, fontSize: `0.75em`, color: `#777`}}>Para mais métodos de pagamento, entrar em contato com a diretoria do CVM.</p>
                 <Button onClick={methods.payBoleto} style={{gridColumn: `3/4`}}>Pagar com boleto bancário</Button>
             </Buttons>
         </WhiteBox>

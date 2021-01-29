@@ -12,10 +12,8 @@ export function* CHECK_STATUS(){
 
         const paymentStatus = yield getUserPaymentStatus(user);
 
-        console.log(paymentStatus)
-
-        if( !paymentStatus.actualCode && paymentStatus.actualStatus !== 7) {
-            yield put({type: 'PMT.SET_STATUS', payload: { actualStatus: 0 }});
+        if( !paymentStatus ) {
+            yield put({type: 'PMT.SET_STATUS', payload: { status: 0, transactionCode: null }});
         } else {
             yield put({type: 'PMT.SET_STATUS', payload: paymentStatus});
         }

@@ -6,9 +6,9 @@ import { useHistory } from 'react-router-dom';
 export default function Noticia({data, ...props}){
     const history = useHistory();
 
-    return <Wrapper onClick={_ => history.push({pathname: `/news/${data._id}`, state: {data}})} picture={`${baseURL}/pictures/news/${data._id}/thumbnail.jpg`}>
+    return <Wrapper onClick={_ => history.push({pathname: `/news/${data.slug}`, state: {data}})} picture={`${process.env.REACT_APP_STRAPI}${data.cover.formats.large.url}`}>
         <Title>{data.title}</Title>
-        <Content>{data.content.split(" ").slice(0, 10).join(" ")}...</Content>
-        <Author>Postado por {data.author.name}</Author>
+        <Content>{data.description}</Content>
+        <Author>Postado por {data?.autor?.username || 'alguém da diretoria.'}</Author>
     </Wrapper>
 }

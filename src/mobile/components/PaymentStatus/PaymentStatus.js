@@ -3,8 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Wrapper, StatusBadge, StatusBadgeWithRefreshBtn } from './PaymentStatus.style';
 import {FontAwesomeIcon as FA} from '@fortawesome/react-fontawesome';
 import { faSyncAlt } from "@fortawesome/free-solid-svg-icons";
+import { useHistory } from 'react-router-dom';
 
 export default function PaymentStatus({refreshable = false, ...props}){
+    const history = useHistory();
     const pmtState = useSelector(state => state.payment);
     const dispatch = useDispatch();
     const {user} = useSelector(state => state.auth);
@@ -14,13 +16,13 @@ export default function PaymentStatus({refreshable = false, ...props}){
         setState(state => ({...state, text, color, canRefresh}));
     }
 
-    function refresh(){
+    async function refresh(){
         if(!pmtState.lastData || ((new Date().getTime()) - pmtState.lastData)/1000 >= 3 ) dispatch({type: 'PMT.CHECK_STATUS'})
-        else console.log("Teste", ((new Date().getTime()) - pmtState.lastData)/1000/60, pmtState.lastData)
+        history.push('/boleto');
     }
 
     useEffect(() => {
-        switch(pmtState.actualStatus){
+        switch(pmtState.status){
             case '3':
             case 3:
                 update('Confirmado', '#195');

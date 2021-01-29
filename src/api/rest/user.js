@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import strapi from 'api/strapi';
 
 const axios = Axios.create({
     baseURL: `${process.env.REACT_APP_HOST}/user/`,
@@ -7,9 +8,9 @@ const axios = Axios.create({
 
 export const getUserPaymentStatus = async function(user){
     try {
-        const data = await(await axios.get(`${user._id}/paymentStatus`)).data.status
+        const {status, data} = await strapi.secure.get('/pagamentos');
 
-        return data;
+        return data.pagamentos[0];
     }catch(e){
         console.log(e.message)
     }
